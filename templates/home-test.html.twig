@@ -1,0 +1,47 @@
+{# Pour faire savoir qu'il faut aller chercher des éléments dans le template base #}
+{% extends 'base.html.twig' %}
+
+{# Pour définir le contenu du block header #}
+{% block title %}
+    Salut tout le monde
+{% endblock %}
+
+{# Pour définir le contenu du block body #}
+{% block body %}
+    <h1>{{ title | upper }}</h1>
+    <h2>{{ title | base64_encode }}</h2>
+    <p>Comment allez-vous ?</p>
+    <a href="{{ path('hello', {'prenom': 'Jean', 'age': 31}) }}">Hello</a>
+
+    {# Conditions #}
+    {% if age >= 18 %}
+        <p>Vous êtes une adulte</p>
+    {% elseif age >= 12 %}
+        <p>Vous êtes un adolescent</p>
+    {% else %}
+        <p>Vous êtes un enfant</p>
+    {% endif %}
+
+    {# Boucles for dans un tableau #}
+    {% for prenom, age in tableau %}
+
+        <p>
+            {% if loop.first %}
+                Première itération :
+            {% elseif loop.last %}
+                Dernière itération :
+            {% else %}
+                Itération intermédiaire : 
+            {% endif %}
+            (itération numéro {{ loop.index0 }}) {{ prenom }} a {{ age }} ans
+        </p>
+
+    {% endfor %}
+
+    {# Boucles for classique #}
+    <ul>
+        {% for i in 0..10 %}
+            <li>{{ i }}</li>
+        {% endfor %}
+    </ul>
+{% endblock %}
