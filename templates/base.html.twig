@@ -8,29 +8,11 @@
         {% block stylesheets %}{% endblock %}
     </head>
     <body>
-        <nav class="navbar navbar-expand-lg navbar-light bg-light">
-            <a class="navbar-brand" href="{{ path('homepage') }}">SymBNB</a>
-            <button aria-controls="navbarColor03" aria-expanded="false" aria-label="Toggle navigation" class="navbar-toggler" data-target="#navbarColor03" data-toggle="collapse" type="button">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarColor03">
-                <ul class="navbar-nav mr-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ path('homepage') }}">Accueil</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ path('ads_index') }}">Annonces</a>
-                    </li>
-                </ul>
-                <ul class="navbar-nav ml-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Mon compte</a>
-                    </li>
-                </ul>
-            </div>
-        </nav>
+        {% include "partials/header.html.twig" %}
 
         {% block body %}{% endblock %}
+
+        {% include "partials/footer.html.twig" %}
 
         <script src="/js/jquery.min.js"></script>
         <script src="/js/popper.min.js"></script>
