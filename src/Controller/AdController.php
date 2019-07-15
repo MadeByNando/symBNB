@@ -12,6 +12,7 @@ use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use App\Form\AnnonceType;
 use Symfony\Component\HttpFoundation\Request;
 use Doctrine\Common\Persistence\ObjectManager;
+use App\Entity\Image;
 
 class AdController extends AbstractController
 {
@@ -41,7 +42,7 @@ class AdController extends AbstractController
      */
     public function create(Request $request, ObjectManager $manager)
     {
-        // On récupère une instance de l'entité pour la lier au formulaire
+        // On récupère une instance de chaque entité à lier au formulaire
         $ad = new Ad();
 
         /**
@@ -53,6 +54,17 @@ class AdController extends AbstractController
         $form->handleRequest($request);         
 
         if($form->isSubmitted() && $form->isValid()){
+
+            /*
+            Pour chaque image ajoutée à l'entité $ad,
+            définir la propriété Ad dans l'entité Image
+            et persisté l'entité Image 
+            */
+            foreach($ad->getImages() as $image){
+                $image->setAd($ad);
+                $manager->persist($image);
+            }
+
             $manager->persist($ad);
             $manager->flush();
 
@@ -68,6 +80,54 @@ class AdController extends AbstractController
 
         return $this->render('ad/new.html.twig', [
             'form' => $form->createView()
+        ]);
+    }
+
+    /**
+     * Permet d'afficher le formulaire d'édition
+     *
+     * @Route("/ads/{slug}/edit", name="ads_edit")
+     * 
+     * @return Response
+     */
+    public function edit(Ad $ad, Request $request, ObjectManager $manager){
+
+        /**
+         * on passe en 1er paramêtre la class du formulaire 
+         * et en second l'instance de la nouvelle annonce
+         */
+        $form = $this->createForm(AnnonceType::class, $ad);
+
+        $form->handleRequest($request);
+        
+        if($form->isSubmitted() && $form->isValid()){
+
+            /*
+            Pour chaque image ajoutée à l'entité $ad,
+            définir la propriété Ad dans l'entité Image
+            et persisté l'entité Image 
+            */
+            foreach($ad->getImages() as $image){
+                $image->setAd($ad);
+                $manager->persist($image);
+            }
+
+            $manager->persist($ad);
+            $manager->flush();
+
+            $this->addFlash(
+                'success',
+                "Les modifications de l'annonce <strong>{$ad->getTitle()}</strong> ont bien été enregistrées !"
+            );  
+
+            return $this->redirectToRoute('ads_show', [
+                'slug' => $ad->getSlug()
+            ]);
+        }        
+
+        return $this->render('ad/edit.html.twig', [
+            'form' => $form->createView(),
+            'ad' => $ad
         ]);
     }
 
