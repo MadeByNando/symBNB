@@ -44,7 +44,8 @@ class AppFixtures extends Fixture
             $picture .= ($genre == "male" ? 'men/' : 'women/') . $pictureId;
 
             // on encoder le mot password avec l'UserPasswordEncoderInterface
-            $hash = $this->encoder->encodePassword($user, 'password');
+            // $hash = $this->encoder->encodePassword($user, 'password');
+            $hash = 'password';
 
             $user->setFirstName($faker->firstname($genre))
                  ->setLastName($faker->lastname)
