@@ -4,10 +4,11 @@ namespace App\DataFixtures;
 
 use App\Entity\Ad;
 use Faker\Factory;
+use App\Entity\Role;
+use App\Entity\User;
+use App\Entity\Image;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\Persistence\ObjectManager;
-use App\Entity\Image;
-use App\Entity\User;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 
 class AppFixtures extends Fixture
@@ -21,6 +22,23 @@ class AppFixtures extends Fixture
     {
         // Utilisation de Faker, localisé en français
         $faker = Factory::create("fr_FR");
+
+        // On crée un role admin
+        $adminRole = new Role();
+        $adminRole->setTitle('ROLE_ADMIN');
+        $manager->persist($adminRole);
+
+        // On crée un utilisateur admin
+        $adminUser = new User();
+        $adminUser->setFirstName("Fernando")
+                  ->setLastName("Pinho")
+                  ->setEmail("pinho.dcj@gmail.com")
+                  ->setHash($this->encoder->encodePassword($adminUser, 'password'))
+                  ->setPicture("https://secure.gravatar.com/avatar/52256d662cd2a8e6145df63cc663e74b")
+                  ->setIntroduction($faker->sentence())
+                  ->setDescription('<p>' . join('</p><p>', $faker->paragraphs(3)) . '</p>')
+                  ->addUserRole($adminRole);
+        $manager->persist($adminUser);
 
         // Nous gérons les utilisateurs
         $users = [];
@@ -44,8 +62,7 @@ class AppFixtures extends Fixture
             $picture .= ($genre == "male" ? 'men/' : 'women/') . $pictureId;
 
             // on encoder le mot password avec l'UserPasswordEncoderInterface
-            // $hash = $this->encoder->encodePassword($user, 'password');
-            $hash = 'password';
+            $hash = $this->encoder->encodePassword($user, 'password');
 
             $user->setFirstName($faker->firstname($genre))
                  ->setLastName($faker->lastname)

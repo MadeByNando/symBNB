@@ -6,12 +6,19 @@ use Cocur\Slugify\Slugify;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\ArrayCollection;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\UserRepository")
  * @ORM\HasLifecycleCallbacks
+ * @UniqueEntity( 
+ *  fields={"email"},
+ *  message="Un autre utilisateur s'est déjà inscript avec cette adresse email, merci de la modifier"
+ * )
  */
-class User
+class User implements UserInterface
 {
     /**
      * @ORM\Id()
@@ -22,21 +29,25 @@ class User
 
     /**
      * @ORM\Column(type="string", length=255)
+     * @Assert\NotBlank(message="Vous devez renseigner votre prénom")
      */
     private $firstName;
 
     /**
      * @ORM\Column(type="string", length=255)
+     * @Assert\NotBlank(message="Vous devez renseigner votre nom de famille")
      */
     private $lastName;
 
     /**
      * @ORM\Column(type="string", length=255)
+     * @Assert\Email(message="Veuillez renseigner un email valide")
      */
     private $email;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
+     * @Assert\Url(message="Veuillez donnez une url valide à votre avatar !")
      */
     private $picture;
 
@@ -46,12 +57,28 @@ class User
     private $hash;
 
     /**
+     * @Assert\EqualTo(
+     *  propertyPath="hash",
+     *  message="Vous n'avez pas correctement confirmé votre mot de passe"
+     * )
+     */
+    public $passwordConfirm;
+
+    /**
      * @ORM\Column(type="string", length=255)
+     * @Assert\Length( 
+     *  min=10,
+     *  minMessage="Votre introduction doit faire au moins 10 caractères"
+     * )
      */
     private $introduction;
 
     /**
      * @ORM\Column(type="text")
+     * @Assert\Length( 
+     *  min=100,
+     *  minMessage="Votre description doit faire au moins 100 caractères"
+     * )
      */
     private $description;
 
@@ -64,6 +91,17 @@ class User
      * @ORM\OneToMany(targetEntity="App\Entity\Ad", mappedBy="author")
      */
     private $ads;
+
+    /**
+     * @ORM\ManyToMany(targetEntity="App\Entity\Role", mappedBy="users")
+     */
+    private $userRoles;
+
+
+    public function getFullName()
+    {
+        return "{$this->firstName} {$this->lastName}";
+    }
 
     /**
      * Initialise le slug à partir du title slugifié
@@ -84,6 +122,7 @@ class User
     public function __construct()
     {
         $this->ads = new ArrayCollection();
+        $this->userRoles = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -217,4 +256,88 @@ class User
 
         return $this;
     }
+
+    /**
+     * Récupère les rôles
+     *
+     * @return void
+     */
+    public function getRoles()
+    {
+        // Transformation de l'ArrayCollection userRoles en simple tableau
+        $roles = $this->userRoles->map(function($role){
+            return $role->getTitle();
+        })->toArray();
+
+        // Ajout du role par défaut ROLE_USER
+        $roles[] = 'ROLE_USER';
+
+        return $roles;
+    }
+
+    /**
+     * Retourne le password
+     *
+     * @return void
+     */
+    public function getPassword()
+    {
+        return $this->hash;
+    }
+
+    /**
+     * Gestion du salt déjà compris dans l'encodage bcrypt
+     *
+     * @return void
+     */
+    public function getSalt(){}
+
+    /**
+     * Returns the username used to authenticate the user.
+     *
+     * @return string The username
+     */
+    public function getUsername()
+    {
+        return $this->email;
+    }  
+
+    /**
+     * Removes sensitive data from the user.
+     *
+     * This is important if, at any given point, sensitive information like
+     * the plain-text password is stored on this object.
+     */
+    public function eraseCredentials()
+    {
+        
+    }
+
+    /**
+     * @return Collection|Role[]
+     */
+    public function getUserRoles(): Collection
+    {
+        return $this->userRoles;
+    }
+
+    public function addUserRole(Role $userRole): self
+    {
+        if (!$this->userRoles->contains($userRole)) {
+            $this->userRoles[] = $userRole;
+            $userRole->addUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeUserRole(Role $userRole): self
+    {
+        if ($this->userRoles->contains($userRole)) {
+            $this->userRoles->removeElement($userRole);
+            $userRole->removeUser($this);
+        }
+
+        return $this;
+    }    
 }

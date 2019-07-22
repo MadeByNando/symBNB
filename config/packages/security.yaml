@@ -5,13 +5,41 @@ security:
             
     # https://symfony.com/doc/current/security.html#where-do-users-come-from-user-providers
     providers:
-        in_memory: { memory: ~ }
+        in_memory:
+            memory:
+                users:
+                    user:  { password: userpass, roles: [ 'ROLE_USER' ] }
+                    admin: { password: adminpass, roles: [ 'ROLE_ADMIN' ] }
+        in_database:
+            entity:
+                # the class of the entity that represents users
+                class: App\Entity\User
+                # the property to query by - e.g. username, email, etc
+                property: email
+
     firewalls:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
         main:
+            pattern: ^/
             anonymous: true
+
+            provider: in_database
+            # provider: in_memory
+
+            form_login:
+                # Chemin du formulaire
+                login_path: account_login
+                # Chemain de vérification des données
+                check_path: account_login
+
+            logout:
+                # Chemin de l'url de déconnexion
+                path: account_logout
+                # Chemin après déconnexion
+                target: account_login
+
 
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#firewalls-authentication
@@ -24,3 +52,10 @@ security:
     access_control:
         # - { path: ^/admin, roles: ROLE_ADMIN }
         # - { path: ^/profile, roles: ROLE_USER }
+        # - { path: ^/admin, ip: 127.0.0.1, requires_channel: https }
+
+    role_hierarchy:
+        # Un admin hérite des droits d'auteur et de modérateur
+        ROLE_ADMIN:       [ROLE_USER, ROLE_MODERATEUR]
+        # On garde ce rôle superadmin, il nous resservira par la suite
+        ROLE_SUPER_ADMIN: [ROLE_ADMIN, ROLE_ALLOWED_TO_SWITCH]        

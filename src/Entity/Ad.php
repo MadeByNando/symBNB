@@ -71,7 +71,7 @@ class Ad
     private $rooms;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Entity\Image", mappedBy="ad", orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="App\Entity\Image", mappedBy="ad", orphanRemoval=false, cascade={"remove"})
      * @Assert\Valid()
      */
     private $images;
