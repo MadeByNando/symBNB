@@ -59,3 +59,10 @@ security:
         ROLE_ADMIN:       [ROLE_USER, ROLE_MODERATEUR]
         # On garde ce rôle superadmin, il nous resservira par la suite
         ROLE_SUPER_ADMIN: [ROLE_ADMIN, ROLE_ALLOWED_TO_SWITCH]        
+
+    # # access_decision_manager allow configure security access with voters
+    # access_decision_manager:
+    #     # strategy can be affirmative, consensus or unanimous 
+    #     strategy: unanimous
+    #     # What if a voter abstain
+    #     allow_if_all_abstain: false

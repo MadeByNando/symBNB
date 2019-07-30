@@ -7,6 +7,7 @@ use Faker\Factory;
 use App\Entity\Role;
 use App\Entity\User;
 use App\Entity\Image;
+use App\Entity\Booking;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
@@ -88,7 +89,8 @@ class AppFixtures extends Fixture
             $content = '<p>' . join('</p><p>', $faker->paragraphs(5)) . '</p>';
 
             // On choisit un user au hasard à chaque fois pour pouvoir simuler des users avec plusieurs annonces
-            $user = $users[mt_rand(0, count($users) - 1)];
+            $random_ad_user = mt_rand(0, count($users) - 1);
+            $user = $users[$random_ad_user];
 
             $ad->setTitle($title)
                 ->setCoverImage($coverImage)
@@ -107,6 +109,47 @@ class AppFixtures extends Fixture
                       ->setAd($ad); // Ici on définit le paramêtre Ad avec l'instance Ad()
 
                 $manager->persist($image);
+            }
+
+            // Gestion des réservations
+            for ($k = 1; $k <= mt_rand(0,10); $k++) { 
+                $booking = new Booking();
+
+                // Réservation effectuée entre il y a 6 mois et 3 mois 
+                $createdAt = $faker->dateTimeBetween('-6 months', '-3 months');
+
+                // Date d'arrivée dans le logement entre il y a 3 mois et maintenant 
+                // (pour que la date d'arrivée soit toujours après la date de création de la réservation)
+                $startDate = $faker->dateTimeBetween('-3 months');
+
+                // Durée entre 3 et 10 jours
+                $duration = mt_rand(3, 10);
+
+                // Pour la date de fin, on clone la date de début pour ne pas la modifier, et on y ajoute la durée de la réservation
+                $endDate = (clone $startDate)->modify("+$duration days");
+
+                // Prix de la réservation 
+                $amount = $ad->getPrice() * $duration;
+
+                // Utilisateur qui a effectué la réservation (en excluant l'utilisateur qui a posté l'annonce)
+                do {
+                    $random_booking_user = mt_rand(0, count($users) -1);
+                } while ($random_booking_user == $random_ad_user);
+                $booker = $users[$random_booking_user];
+
+                // On ajoute un commentaire
+                $comment = $faker->paragraph();
+
+                $booking->setBooker($booker)
+                        ->setAd($ad)
+                        ->setStartDate($startDate)
+                        ->setEndDate($endDate)
+                        ->setCreatedAt($createdAt)
+                        ->setAmount($amount)
+                        ->setComment($comment);
+                        
+                $manager->persist($booking);
+
             }
 
             $manager->persist($ad);
